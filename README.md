@@ -1,6 +1,11 @@
-# Reformer Language Model
-[lucidrains/reformer-pytorch](https://github.com/lucidrains/reformer-pytorch)를 이용한 다양한 Reformer Language Model
+# Reformer - NER Subtask
+[Reformer Language Model](https://github.com/nawnoes/reformer-language-model)
 
+Seonghwan Kim님이 공유한 Reformer 모델 구현체 중 MLM모델로 Pre-trained하여 NER Task를 수행
+
+Reformer에 대한 자세한 내용에 대한 정리는 Seonghwan Kim님 [Blog](https://velog.io/@nawnoes/Reformer-%EA%B0%9C%EC%9A%94) 에 잘 정리가 되어있습니다.
+
+---
 ## Reformer
 2020년에 발표 된 모델로, `LSH(Local Sensitive Hashing)`, `RevNet(Reversivle Residual Network)`, `Chunked Feed Forward Layer`,
 `Axial Positional Encodings`을 통해서 트랜스포머의 메모리 문제를 개선하고자 시도한 모델. 
@@ -18,23 +23,17 @@ O(L log(L))로 개선
 - `Axial Positional Encoding`: 매우 큰 input sequence에 대해서도 positional encoding을 사용할 수 있게 하는 방법. 
 
 
-## Vocab & Tokenizer
+### Vocab & Tokenizer
 `Sentencepiece`와 `Wordpiece` 중 기존에 사용해보지 않은 Wordpiece Tokenizer 사용.
 
-## Data 
+### Data 
 #### 사용 데이터
-- 한국어 위키
+- 한국어 위키: [ratsgo님 전처리 데이터](https://ratsgo.github.io/embedding/downloaddata.html)
 
-## GPU
-① nipa 정보통신진흥원 GPU 자원
-- GPU 할당량: 10TF
-- GPU 카드: RTX6000
-- GPU RAM: 24G
+### GPU
+-  RTX 3080 (epoch당 1hr 30m)
 
-② Google Colab pro
-
-## Language Model 
-### 1. Masked Language Model(ex. BERT) 
+### Language Model - Masked Language Model(ex. BERT) 
 BERT에서 사용한 Masked Language Model을 이용한 언어모델 학습. NSP와 SOP 없이 학습.
 ![](./images/mlm.png)
 #### Model
@@ -47,13 +46,13 @@ BERT에서 사용한 Masked Language Model을 이용한 언어모델 학습. NSP
 | **L=8**  |[8/128]|[8/256]|[**8/512 (BERT-Medium)**]|[8/768]|
 | **L=10** |[10/128]|[10/256]|[10/512]|[10/768]|
 | **L=12** |[12/128]|[12/256]|[12/512]|[**12/768 (BERT-Base)**]|
-##### Reformer-mlm-small Config
-**BERT-base**의 절반 크기의 레이어 사용.
+##### mlm-pretrain-small
+**BERT-base**의 1/3 크기의 레이어 사용.
 ```
 max_len = 512   
-batch_size = 128
+batch_size = 64
 dim = 512
-depth = 6
+depth = 4
 heads = 8
 causal = False
 ```
@@ -64,99 +63,65 @@ causal = False
 [CLS] 조선 제3대 태종과 그의 비 원경왕후의 묘인 헌릉과 제23대 순조와 그의 비 순원왕후 합장되어 있는 묘인 인릉이 있다.둘을 합하여 헌인릉이라 한다. [SEP] (내곡동 소재) [SEP] 구룡산(九龍山 : 306m)기슭에 세종대왕릉(英陵)이 있었으나, 영릉은 1469년(예종 1년)에 여주로 천장(遷葬)하였다. [SEP] (내곡동 소재) [SEP] 예술의 전당은 대한민국 최대 규모의 종합예술시설로서, 오페라하우스, 미술관, 서예관, 음악관 등이 있고, 예술의 전당 바로 옆에는 국립국악기관인 국립국악원이 있다. [SEP] (서초동 소재) [SEP] 서초동에는 교보문고, 대법원, 검찰청, 국립중앙도서관등이 있다. [SEP] 반포4동에는 신세계백화점, 마르퀘스플라자, 메리어트호텔, 호남선 고속버스터미널 등이 있는 센트럴시티가 있고 바로 옆에는 경부선 등 고속버스터미널이 있는 서울고속버스터미널이 있다. [SEP] 반포한강공원에는 세빛섬과 반포대교 달빛무지개 분수 등의 명소가 있다. [SEP] 서초구 양재동 일대에 자리잡고 있는 양재시민의 숲은 가족단위로 나들이하기에 좋은 공원으로 1986년 개장한 곳이다. 가을의 은행나무 낙엽길이 유명하다. [SEP] 양재동에는 유스호스텔인 서울교육문화회관과, 반포동 고속터미널에 JW 메리어트호텔 서울, 서울팔레스호텔이 위치하고 있다. [SEP] 방배동은 먹자골목으로 유명하다. [SEP] 1976년부터 한자리를 지켜온 레스토랑 "장미의 숲"은 1980년대 방배동을 "최고의 카페촌"으로 부상케 한 대표적인 곳이다. [SEP] 카페 "밤과 음악사이"는 1970~80년대 가요 [SEP] 와 인테리어를 하고 있으며, 통골뱅이와 김치찌개가 대표적인 안줏거리이다. [SEP] "멋쟁이 카페"들로 명성을 날렸던 방배동은 청담동에 그 명성을 내준 대신 요즘은 먹자골목으로 유명하다. [SEP] 이 일대는 아귀찜을 전문으로 하는 식당이 많다. [SEP] 
 ```
 
-#### Pretraining Result
-1. Eval Losses
-![](./images/mlm_eval_losses.png)
-1. Eval Perplexity
-![](./images/mlm_eval_perplexity.png)
-#### Fine-Tuning
-##### Korquad v1.0
-reformer-bert-small 모델에 대한 결과
-**모델설정**
+#### Pretraining 결과
+
+10 Epochs Train Eval Losses : 2.3536606443871695
+
+---
+## NER subtask Fine-Tuning
+
+PreTrain Reformer를 LM으로 이용하고 NER classifier(FFN) 로 Classification 함.  
+
+### 학습데이터 
+Naver NER dataset : [github link](https://github.com/naver/nlp-challenge)
+- 해당 데이터셋에 Train dataset만 존재하기에, monologg님이 kobert-ner에 공유한 split된 data를 이용하였습니다.
+[(Data link)](https://github.com/aisolab/nlp_implementation/tree/master/Bidirectional_LSTM-CRF_Models_for_Sequence_Tagging/data)
+
+  Train (81,000) / Test (9,000)
+
+### 모델설정
+ner-pretrain-small.json
 ```t
-max_len = 512  
-batch_size = 128
-dim = 512
-depth = 6
-heads = 8
-```
-|       model       | exact_match | f1 score|
-|:-----------------:|-------------|---------|
-|reformer-bert-small|    52.1     |  79.02  |
-|      KoBERT       |    51.75    |  79.15  |
-
-생각해볼수 있는 개선 사항으로는
-- 모델의 크기 키우는 방법
-- 학습 데이터를 증가시키는 방법
-
-### 2. Auto Regressive(ex. GPT-2)
-Reformer Decoder를 이용한 Auto regressive language model.
-![](./images/alm.png)
-#### Model
-GPT-2 Small 모델 크기. **입력 토큰 수 5120**로 학습 가능.
-```text
-max_len = 5120 # AxialPositionalEmbedding을 위한 (79,64) 값 and max_len/(bucket_size*2) == 0 이어야한다.
-dim = 768
-depth = 12
-heads = 12
-causal = True # True for ReformerLM Auto Regressive,
+reformer + NER classifier
 ```
 
-#### Usage
-① `/config/autoregressive/`의 config 설정 확인  
-② `/data` vocab 및 학습데이터 확인  
-③ `/pretrain/autoregressive-model.py` 실행 
-#### Pretraining
-1052199 step 학습 도중 서버 중지로 학습 중지.
-![](./images/autoregressive_train_losses.png)
+### 학습결과
 
-#### Text Generation 
-파인튜닝 없이 사전학습된 언어모델만으로 텍스트 생성 테스트. Top-P Sampling 사용.
-```text
-사람이 철학적으로 생각하는 것은 그들에게 도움이 되겠음을 말해주고 있기 때문이다. 
-예를 들었을 수도 있다면 ( 그 사람이 내재해 있기 ), 그 사람이 그 사람을 신에게 말하는 것이었다고 생각할 때 그것은 바로 신에 의해 선택되고 있다.
-그러기 때문이며 또한 그것들을 신이 하듯이 그 사람은 내다 ( 내적 · 정신 ) 와 맺어져 있는 것이 아니라고 주장하거나 혹은 인간의 자유로 돌려질 것을 기대할 수가 없다는 것도 믿기 때문이다. 
-신으로부터 그 사람을 하도록 선택하고 그것을 신에게 선택한 것으로 바꾸고 있는 것에 대해 말한다, 즉 그 사람에게 있어서는, 사람이 다른 사람은 거기에 개입하게 함으로서 자신의 창조나 자유롭거나 또는 보다 신에게 희생과 의무에 관한 질문으로 그 사람의 신에 관한 질문의 지식은 절대 이성적일 수는 없다고 하는 것은 아니라고 주장하는 것이다 라고 주장한다 
-이 경우 ― 이러한 믿음이야말로 합법적으로 믿을 수도 없으며 또 그 사람의 신앙이 내적인 동기가 되는 것은, 이 신으로부터 온 것이라는 믿은 신에게로 돌이키는 것이다라고 주장한다. 
-또 어떤 신에게는 신이 하려는 마음이 존재해서는 신에게 제의한 것도 있다 : 신이 하와 그 주위가 신에게서 양자를 받은 것은 신을 제하고 있는 것을 말한다. 라고 하여 그 신이 인간을 창조하는 것이라고 한다 : 
-신이 있을 때에는 신의 존재의 개념을 신봉해야 한다 또 인간이 신을 창조할 때에는 인간이 창조되지 않고 그 사람의 이성이 필요하게 된다고 주장하는 사람이 존재한다 : 
-이것이 바로 하나이고, 이것이 신에게 주어지는 신이다, 하나, 이 신에게서 신의 신에게 유도하는 신의 개념에 대해 논해진다 ― 신에게 신을 전하려고 하는 주장은 신의 뜻이나 신과 동일하고 그 신에 의해 구성된다는 것. 
-신에게서 받은 개념이라고 하여서는 신으로부터 받은 것을 말하여, 거기에서는, 이 개념과 관련한 것은 없다라는 것 뿐이다 라며 이것을 부정하면 안 되고 있지만 신과 신이 인간의 관계에서는 신에 대해서 신과 신이라고 할 수 없게 되기 때문이다 ) 이라는 것은 신의 속성이라고 할 때 그 사람은 그 사람을 신이라고 부르는 사람이다 
-( 이 경우는 신이었기, 신이 된다고 하는 것이다, 하지만 신이 되면 신이 된다고 한다.. 만약 누군지 신이 된다면 신의 속성이나 신의 이름으로 신의 이름으로 신의 대상이 되는 것도 아니며 신과 동일할 것이다고, 그러기 위하여 신이 인간과 같은 속성이라고 주장하였다가 바로 그것이 하나라고 해도 옳음의 성질로서의 하나라 하여도 그것이 신을 신으로 하여 신이 되어 인간 신의 조언인 것으로 된다. 
-그러기에는 신이 인간과 신을 동일할 때에는, 신이 되어 자연적인 존재에 의한 것이라고 했다면 그것은 이미 고대인의 창조가 진전되는 것으로 되었다. 
-만물에 관한 주장이라고 해서 그것은 신은 존재하지 않으므로 신의 존재를 신의 대상이 되는 존재가 된다는 의미일 수는 있다, 고 하는 것이다라고 하는 생각이 만도 주장하여야 한다. 
-신은 존재하지 않는 것이 신은 아니며 인간이 존재하게 하는 것은 존재하지 않는 것이다'존재의 정의를 주장한 신에 의한 신이'가 존재하여 신이 존재하지 않는 존재이다 라고 생각했다 ) 라고 말한다. 
-신의 속성이란 것이 존재하지 않는다 」 는 것이 되어 신이 존재하면 그것은 신이 존재할 리가 없으며 신을 만들어 내거나 또는 그 신으로부터 온 것을 알 필요가 있다고 했다라고 하는 것에 의해서 신은 존재하지 않는다고 하고 신에게 신이 존재한다. 
-이 개념에는 신이 인간 자신이 존재하기 전부터 신으로 출현한 것으로 생각되고 있었던 것인 이상 신으로, 그 사람이란, 인간과 같은 존재를 가지거나 신과 관계가 존재한다고도 하는 것은 존재하고 있다는 것은 신이 존재한다 」 라는 것이 되지만 그 후 신에는 신에 의한 것도 존재하기 위해서는 신에 따라 구별되고 있기는 곤란하고 있기도 할 가능성 있다라고 할 것이다 … … 신의 존재가 어떻게 만들어질지, 
-그 신에 의해 신이 인간에 있어서의 신성 ( 인격을 유지하지 않는다는 신의 힘인 존재는 존재하지 않는다는 논리가 되었다, 라고 했다, 라는 논의, 후설로서 「 존재하고 있어 ( 인간 존재를 존재하고 있은 ) 어떤 것 」 에 대해서는, 신이 인간에 있어서 존재할 수 있다는 것은 아니다 ( 이 주장 ) 라는 말은, 인간의 경우에는 타인과 비교가 되지만 그렇지 않는다 라고 하여 신 개념을 가지고 있을 가능성도 있고 있을지도 알수 있다
-``` 
-### 3. Replaced Token Detection(ex. ELECTRA)
-![](https://t2.daumcdn.net/thumb/R720x0.fpng/?fname=http://t1.daumcdn.net/brunch/service/user/Zvf/image/_twj8fBpj3opipMwC-w7Scv89yM.png)
-#### Model 
-`ELECTRA-small` 모델
-  
-|                  |               | Layers | Embedding Size | Hidden Size | # heads |
-| :--------------: | ------------: | -----: | -------------: | ----------: | ------: |
-| `ELECTRA-small`  | Discriminator |     12 |            128 |         256 |      12 |
-|                  |     Generator |     12 |            128 |         256 |       4 |
+- 10 epochs Fine-Turning 진행함. (epoch당 15m)
 
-#### Usage
-① `/config/electra/`의 config 설정 확인  
-② `/data` vocab 및 학습데이터 확인  
-③ `/pretrain/electra-model.py` 실행 
-#### Result
-![](./images/electra_loss_graph_1_epoch.png)
-#### Fine-tuning
-##### 실행
-`finetuning/electra-korquad.ipynb` colab에서 실행
-##### 결과
-|                        | Exact Match(EM) |   F1   |
-| :--------------------: | --------------: | -----: |
-| Reformer-ELECTRA-small |           52.04 |  78.53 |
-|         KoBERT         |           51.75 |  79.15 |
+```
+              precision    recall  f1-score   support
+
+         AFW       0.00      0.00      0.00         0
+         ANM       0.80      0.50      0.62         8
+         CVL       0.82      0.68      0.74        53
+         DAT       0.83      1.00      0.91        10
+         EVT       0.64      0.88      0.74         8
+         FLD       1.00      1.00      1.00         2
+         LOC       0.92      1.00      0.96        12
+         NUM       0.85      0.82      0.84        40
+         ORG       0.81      0.88      0.84        24
+         PER       0.93      0.82      0.87        34
+         PLT       0.00      0.00      0.00         1
+         TIM       0.00      0.00      0.00         1
+         TRM       0.22      0.29      0.25         7
+
+   micro avg       0.80      0.78      0.79       200
+   macro avg       0.60      0.60      0.60       200
+weighted avg       0.81      0.78      0.79       200
+```
+
+### Todo
+
+- 추가 Pretrained 진행
+- 추가 Fine-Tune 진행  
+- InterActive Shell notebook 개선
  
  # References
  - [The Reformer - Pushing the limits of language modeling](https://colab.research.google.com/drive/1MYxvC4RbKeDzY2lFfesN-CvPLKLk00CQ)
  - [reformer-pytorch](https://github.com/lucidrains/reformer-pytorch)
- - [electra-pytorch](https://github.com/lucidrains/electra-pytorch)
- - [나만의 BERT Wordpiece Vocab 만들기](https://monologg.kr/2020/04/27/wordpiece-vocab/)
+ - [Reformer Language Model](https://github.com/nawnoes/reformer-language-model)
+ - [Kobert-NER](https://github.com/monologg/KoBERT-NER)
+ - [Kober-NER-CRF](https://github.com/eagle705/pytorch-bert-crf-ner)
+
+
