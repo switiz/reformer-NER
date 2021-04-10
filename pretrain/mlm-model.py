@@ -213,6 +213,8 @@ class ReformerTrainer(object):
 
         return None
     def save(self, epoch, model, optimizer, losses, train_step):
+        if os.path.exists(f'{self.checkpoint_path}/{self.model_name}.pth'):
+            os.remove(f'{self.checkpoint_path}/{self.model_name}.pth')
         torch.save({
             'epoch': epoch,  # 현재 학습 epoch
             'model_state_dict': model.state_dict(),  # 모델 저장

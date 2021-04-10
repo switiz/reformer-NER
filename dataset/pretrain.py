@@ -22,19 +22,19 @@ class DatasetForMLM(Dataset):
         self.docs = []
         doc = ""
         # 파일 리스트
-        file_list = os.listdir(path)
+        #file_list = os.listdir(path)
 
         # num_lines = sum(1 for line in open(path, 'r',encoding='utf-8'))
-        file_progress_bar = tqdm(file_list, position=0, leave=True, bar_format='{l_bar}{bar:10}{r_bar}')
-        for file_name in file_progress_bar:
-            path = f'{path}/{file_name}'
-            data_file = open(path, 'r', encoding='utf-8')
-            for line in tqdm(data_file,
-                             desc='Data load for pretraining',
-                             position=1, leave=True):
-                line = line[:-1]
-                self.docs.append(line)
-        logging.info('complete data load')
+        #file_progress_bar = tqdm(file_list, position=0, leave=True, bar_format='{l_bar}{bar:10}{r_bar}')
+        #for file_name in file_progress_bar:
+            #path = f'{path}/{file_name}'
+        data_file = open(path, 'r', encoding='utf-8')
+        for line in tqdm(data_file,
+                         desc='Data load for pretraining',
+                         position=1, leave=True):
+            line = line[:-1]
+            self.docs.append(line)
+        #logging.info('complete data load')
 
     def mask_tokens(self, inputs: torch.Tensor, mlm_probability=0.15, pad=True):
         """ Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original. """

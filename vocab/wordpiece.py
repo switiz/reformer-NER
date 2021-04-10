@@ -10,14 +10,13 @@ parser.add_argument("--limit_alphabet", type=int, default=6000)
 args = parser.parse_args()
 
 tokenizer = BertWordPieceTokenizer(
-    vocab_file=None,
+    vocab=None,
     clean_text=True,
     handle_chinese_chars=True,
     strip_accents=False, # Must be False if cased model
     lowercase=False,
     wordpieces_prefix="##"
 )
-
 tokenizer.train(
     files=[args.corpus_file],
     limit_alphabet=args.limit_alphabet,
